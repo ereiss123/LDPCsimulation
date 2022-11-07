@@ -1,10 +1,9 @@
 //==============================================================
-// decodeMinSum.cpp
+// decodeBP.cpp
 // 
-// This is a "sanity-check" implementation of the min-sum
-// LDPC decoding algorithm for direct comparison against
-// GDBF algorithms and also to confirm performance for
-// the same codes evaluated with other simulation tools.
+// This is a reference implementation of the belief propagation
+// LDPC decoding algorithm for benchmarking comparisons against
+// new decoding algorithms and hardware implementations.
 //==============================================================
 
 
@@ -24,7 +23,7 @@ using namespace std;
 
 
 //============ GLOBAL PARAMETERS ============//
-int    num_iterations; // Maximum number of iterations for MLSBM (an additional phase of Gallager-A follows after this)
+int    num_iterations; // Maximum number of iterations 
 double MAXLLR;         // Maximum magnitude of LLR messages
 
 //============ DECODING ALGORITHM PREDEFINES ===============//
@@ -61,7 +60,8 @@ int main(int argc, char * argv[])
   vector<string> command_arguments(0);
   command_arguments.push_back("alist");
   command_arguments.push_back("R");
-  command_arguments.push_back("pchan");
+  //  command_arguments.push_back("pchan");
+  command_arguments.push_back("SNR");
   command_arguments.push_back("T");
   command_arguments.push_back("logfilename");
   command_arguments.push_back("[codeword filename]");
@@ -82,8 +82,10 @@ int main(int argc, char * argv[])
   cout << "PARAMETERS: \n alist = \t" << argv[1] << endl;
   double R = atof(argv[idx++]);
   cout << " R = \t" << R << endl;
-  double pchan = atof(argv[idx++]);
-  cout << " pchan = \t" << pchan << endl;
+  //double pchan = atof(argv[idx++]);
+  //cout << " pchan = \t" << pchan << endl;
+  double SNR = atof(argv[idx++]);
+  cout << " SNR = \t" << SNR << endl;
   num_iterations = atoi(argv[idx++]);
   cout << " T = \t" << num_iterations << endl;
   string logfilename(argv[idx++]);
@@ -99,8 +101,8 @@ int main(int argc, char * argv[])
     cout << "\nUsing all-zero sequence.\n";
 
   // Compute channel parameters:
-  //  double N0 = pow(10.0,-SNR/10.0)/R;
-  //  double sigma = sqrt(N0/2.0);
+  double N0 = pow(10.0,-SNR/10.0)/R;  // power spectral density of noise
+  double sigma = sqrt(N0/2.0);  // Standard deviation of channel noise
 
   // Get code parameters:
   int dv = H.biggest_num_n;
@@ -108,8 +110,8 @@ int main(int argc, char * argv[])
 
   // Report initial status messages:
   cout << "Simulating Min-Sum decoding on code with N=" << H.N << ", M=" << H.M << ", R=" << R << ", dv=" << dv << ", dc=" << dc << endl;
-  cout << "\nParameters are:\n\tpchan\t" << pchan << endl; 
-
+  //cout << "\nParameters are:\n\tpchan\t" << pchan << endl; 
+  cout << "\nParameters are:\n\tSNR\t" << SNR << endl; 
 
   // Declare top-level variables:
   vector<int>    c(H.N,1);     // Bipolar codeword (all +1 in this simulation)
@@ -169,22 +171,24 @@ int main(int argc, char * argv[])
 	    x[i] = c[i];
 	  }
 	}
-      // Emulate BSC transmission      
+      // Emulate Additive White Gaussian Noise (AWGN) transmission      
       for (i=0; i<H.N; i++)
 	{
+	  /* BSC:
 	  y[i] = x[i]; //*(1.0+sigma*rann());
 	  double rnum = ranu();
 	  if (rnum < pchan) {
 	    y[i] = 1.0 - y[i];
 	  }
-
+	  */
+	  y[i] = x[i]*(1.0+sigma*rann());
 	  
-	  //yq[i] = log(pchan)/log(1.0-pchan); // y[i]; //4.0*y[i]/N0;
+	  //yq[i] = log(pchan)/log(1.0-pchan); // y[i]; //
 	  
-	  if (y[i] > 0) 
-	    yq[i] = MAXLLR;
-	  else
-	    yq[i] = -MAXLLR;
+	  yq[i] = 4.0*y[i]/N0;
+	  
+	  if (abs(yq[i]) > MAXLLR) 
+	    yq[i] = sgn(yq[i])*MAXLLR;
 	  
 	  r[i] = sgn(yq[i]);
 	  d[i] = r[i];
@@ -226,7 +230,7 @@ int main(int argc, char * argv[])
 	  error_weight_hist[newErrors-1]++;
 	  wordErrors++;
 	  
-	  sendMQTT(errors,wordErrors,totalBits+H.N,totalWords+1);
+	  //	  sendMQTT(errors,wordErrors,totalBits+H.N,totalWords+1);
 	}
 
       // Increment frame and bit counters:
@@ -235,7 +239,7 @@ int main(int argc, char * argv[])
       totalIterations += it;
       
       // ------------------------------------------------
-      // Give a status message every 100 frames
+      // Give a status message every 5 frames
       if ((totalWords % 5) == 0)
 	{
 	  cout << "\nIncremental result: " << errors << " bit errs in " << totalWords << " words, BER=" << (double)errors/totalBits 
@@ -259,7 +263,7 @@ int main(int argc, char * argv[])
 
   ofstream of(logfilename.c_str(),ios::app);
   char tab = '\t';
-  of << pchan << tab << (double)errors/totalBits << tab << (double) totalIterations/totalWords << tab
+  of << SNR << tab << (double)errors/totalBits << tab << (double) totalIterations/totalWords << tab
      << (double) wordErrors/totalWords << tab
      << num_iterations << tab;
 
@@ -440,7 +444,7 @@ void printVector(vector<double> v)
     }
 }                                           
 
-
+/*
 void sendMQTT(int bitErrors, int wordErrors, int totalBits, int totalWords) {
   stringstream ss;
   ss << "./send_message.sh \'" 
@@ -452,7 +456,7 @@ void sendMQTT(int bitErrors, int wordErrors, int totalBits, int totalWords) {
 
   system(ss.str().c_str());
 }
-
+*/
 
 
 void writeErroneousMessagesToFile(alist_struct & H, vector<vector<int> > & check_to_sym, vector<vector<int> > & sym_to_check, vector<int> & c, vector<int> & d, int fid)
