@@ -1,0 +1,55 @@
+#!/bin/sh
+
+
+# Example of a (2000,1000) LDPC code with 3 checks per bit and 6 bits per 
+# check, tested on Additive White Gaussian Noise channels with noise standard 
+# deviations varying from 0.80 to 0.95.
+#
+# Testing is done by transmitting random messages, which is safer (though 
+# slower) than using only zero messages.  Decoding is done using a maximum 
+# of 250 iterations of probability propagation.
+
+set -e  # Stop if an error occurs
+set -v  # Echo commands as they are read
+
+#make-ldpc ex-ldpc36-1000a.pchk 1000 2000 1 evenboth 3 no4cycle
+#make-gen  PEGReg504x1008.pchk PEGReg504x1008.gen dense
+#rand-src data.src 1 504x30000
+#encode PEGReg504x1008.pchk PEGReg504x1008.gen data.src data.enc
+
+#make-gen  PegReg4000.pchk PegReg4000.gen dense
+#rand-src  PegReg4000.src 1 1000x100
+#encode    PegReg4000.pchk PegReg4000.gen PegReg4000.src \
+#         PegReg4000.enc
+
+# NOISE STANDARD DEVIATION 0.8912 , Eb/N0 = 1 dB
+
+transmit data.enc data.rec 1 awgn 0.8912
+decode   PegReg4000.pchk data.rec data.dec awgn 0.8912\
+         prprp 250
+verify   PegReg4000.pchk data.dec PegReg4000.gen \
+         data.src 
+
+# NOISE STANDARD DEVIATION 0.85, Eb/N0 = 1.41 dB
+
+#transmit PEGReg504x1008.enc PEGReg504x1008.rec 1 awgn 0.85
+#decode   PEGReg504x1008.pchk PEGReg504x1008.rec PEGReg504x1008.dec awgn 0.85\
+#         prprp 250
+#verify   PEGReg504x1008.pchk PEGReg504x1008.dec PEGReg504x1008.gen \
+#         PEGReg504x1008.src 
+
+# NOISE STANDARD DEVIATION 0.90, Eb/N0 = 0.92 dB
+
+#transmit PEGReg504x1008.enc PEGReg504x1008.rec 1 awgn 0.90
+#decode   PEGReg504x1008.pchk PEGReg504x1008.rec PEGReg504x1008.dec awgn 0.90\
+#         prprp 250
+#verify   PEGReg504x1008.pchk PEGReg504x1008.dec PEGReg504x1008.gen \
+#         PEGReg504x1008.src 
+
+# NOISE STANDARD DEVIATION 0.95, Eb/N0 = 0.45 dB
+
+#transmit PEGReg504x1008.enc PEGReg504x1008.rec 1 awgn 0.95
+#decode   PEGReg504x1008.pchk PEGReg504x1008.rec PEGReg504x1008.dec awgn 0.95\
+#         prprp 250
+#verify   PEGReg504x1008.pchk PEGReg504x1008.dec PEGReg504x1008.gen \
+#         PEGReg504x1008.src
