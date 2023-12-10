@@ -51,7 +51,7 @@ DEBUG=yes
 # and SystemC headers.
 #SYSTEMC_LIB := $(SYSTEMC_HOME)/lib-$(TARGET_ARCH)
 TARGET_ARCH := linux64
-SYSTEMC_HOME := /usr/local/systemc-2.2.0
+SYSTEMC_HOME := /usr/local/systemc-2.3.3
 SYSTEMC_LIB := $(SYSTEMC_HOME)/lib-$(TARGET_ARCH)
 
 #SYSTEMC_HOME := /Library/SystemC/Current
