@@ -53,7 +53,24 @@ def simulate_channel(N: int, sigma: float, mu:int, q: int) -> gl.FieldArray:
         idx += 1
     return samples
 
-def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, q: int) -> gl.FieldArray:
+def likelihood(y: float, sigma: float, bit: int) -> float:
+    """_summary_
+    
+    Calculates the likelihood of a bit being 1 or 0 given the received sample.
+
+    Args:
+        y (float): received sample
+        sigma (float): standard deviation of the Gaussian distribution
+        bit (int): bit to calculate the likelihood for
+
+    Returns:
+        float: likelihood of the bit being 1 or 0
+    """
+    assert bit in range(2)
+    g = 1/(1+math.exp(2*abs(y)/sigma**2 ))
+    return g if bit == 1 else 1-g    
+
+def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, p: int, sigma: float) -> gl.FieldArray:
     """
     Performs belief propagation decoding on a NB-LDPC code assuming the all-zero codeword is transmitted.
     
@@ -62,24 +79,39 @@ def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, 
         samples (galois.FieldArray): received samples
         max_iter (int): maximum number of iterations
         q (int): order of the Galois field
+        sigma (float): standard deviation of the Gaussian distribution
     """
     M,N = H.shape
-    GF = gl.GF(q)
+    GF = gl.GF(p)
     
     # Initialize messages
-    q = GF(np.zeros((M,N),dtype=int))
-    r = GF(np.zeros((M,N),dtype=int))
+    q = [(np.zeros((M,N),dtype=int)) for _ in range(p)]
+    r = [(np.zeros((M,N),dtype=int)) for _ in range(p)]
     
     # Initialize q
-    for m in range(M):
-        for n in range(N):
-            if H[m,n] != GF(0):
-                sample = int(samples[n]) # pertinent sample
-                sample_bin = bin(sample)[2:].zfill(int(math.log2(q))) # convert to binary
-                
+    s = 1
+    for sample in samples:
+        for m in range(M):
+            for n in range(N):
+                if H[m,n] != GF(0):
+                    for element in range(p):
+                        ele_bin = bin(int(element))[2:].zfill(int(math.log2(p)))
+                        print(ele_bin)
+                        f = 1
+                        for bit in ele_bin:
+                            f *= likelihood(sample,sigma,int(bit))
+                        q[element][m,n] = f
+                        
+    # Decode
+    iter = 0
+    while(iter < max_iter):
+        # Update r
+        
+    decision = GF(np.zeros(N,dtype=int))         
     return decision
     
-    
+H = build_H(10,5,3,4)
+
     
         
 
