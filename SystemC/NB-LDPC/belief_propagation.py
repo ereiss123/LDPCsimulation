@@ -39,6 +39,9 @@ def simulate_channel(N: int, sigma: float, mu:int, q: int) -> gl.FieldArray:
         sigma (float): standard deviation of the Gaussian distribution
         mu (int): mean of the Gaussian distribution
         q (int): order of the Galois field
+        
+    Returns:
+        gl.FieldArray: noise sample vector
     """
     GF = gl.GF(q)
     noise = np.sign(np.random.normal(0,sigma,int(N*math.log2(q)))) # Generate noise bits and make decision
@@ -81,31 +84,51 @@ def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, 
         q (int): order of the Galois field
         sigma (float): standard deviation of the Gaussian distribution
     """
-    M,N = H.shape
-    GF = gl.GF(p)
+    M,N = H.shape # get the dimensions of the parity check matrix, M is the number of parity check equations, N is the block length
+    GF = gl.GF(p) # create a Galois field of order p
     
     # Initialize messages
-    q = [(np.zeros((M,N),dtype=int)) for _ in range(p)]
+    q = [(np.zeros((M,N),dtype=int)) for _ in range(p)] # q is a list of MxN matrices, one for each element in the Galois field
     r = [(np.zeros((M,N),dtype=int)) for _ in range(p)]
     
     # Initialize q
     s = 1
-    for sample in samples:
-        for m in range(M):
-            for n in range(N):
-                if H[m,n] != GF(0):
-                    for element in range(p):
-                        ele_bin = bin(int(element))[2:].zfill(int(math.log2(p)))
-                        print(ele_bin)
-                        f = 1
-                        for bit in ele_bin:
-                            f *= likelihood(sample,sigma,int(bit))
-                        q[element][m,n] = f
+    for m in range(M):
+        for n in range(N):
+            if H[m,n] != GF(0):
+                for element in range(p):
+                    ele_bin = bin(int(element))[2:].zfill(int(math.log2(p)))
+                    print(ele_bin)
+                    f = 1
+                    for bit in ele_bin:
+                        f *= likelihood(samples[n],sigma,int(bit))
+                    q[element][m,n] = f
                         
     # Decode
     iter = 0
     while(iter < max_iter):
         # Update r
+        for m in range(M):
+            for n in range(N):
+                if H[m,n] != GF(0):
+                    for element in range(p):
+                        stored_sample = samples[n]
+                        samples[n] = GF(element)
+                        if GF(1) in samples or GF(2) in samples or GF(3) in samples:
+                            # prob of zm given samples is 0
+                            r[element][m,n] = 0
+                            samples[n] = stored_sample
+                            continue
+                        else:
+                            # calculate product of adjacent q's
+                            prod = 1
+                            for i in range(N):
+                                if i == n:
+                                    continue
+                                prod *= q[element][m,i]
+                            r[element][m,n] = prod
+                            samples[n] = stored_sample
+                        
         
     decision = GF(np.zeros(N,dtype=int))         
     return decision
