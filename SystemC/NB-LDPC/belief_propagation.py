@@ -88,8 +88,8 @@ def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, 
     GF = gl.GF(p) # create a Galois field of order p
     
     # Initialize messages
-    q = [(np.zeros((M,N),dtype=int)) for _ in range(p)] # q is a list of MxN matrices, one for each element in the Galois field
-    r = [(np.zeros((M,N),dtype=int)) for _ in range(p)]
+    q = [(np.zeros((M,N),dtype=int)) for a in range(p)] # q is the probability that symbol n is a, one for each element in the Galois field
+    r = [(np.zeros((M,N),dtype=int)) for a in range(p)] # r is the probability that check m is satisfied if sample n is set to a, one for each element in the Galois field
     
     # Initialize q
     s = 1
@@ -128,6 +128,14 @@ def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, 
                                 prod *= q[element][m,i]
                             r[element][m,n] = prod
                             samples[n] = stored_sample
+        
+        # update q
+        for m in range(M):
+            for n in range(N):
+                if H[m,n] != GF(0):
+                    for element in range(p):
+                        
+                        
                         
         
     decision = GF(np.zeros(N,dtype=int))         
