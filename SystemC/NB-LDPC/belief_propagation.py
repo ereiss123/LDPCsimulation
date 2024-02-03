@@ -59,7 +59,7 @@ def simulate_channel(N: int, sigma: float, mu:int, q: int) -> gl.FieldArray:
 def likelihood(y: float, sigma: float, bit: int) -> float:
     """_summary_
     
-    Calculates the likelihood of a bit being 1 or 0 given the received sample.
+    Calculates the likelihood of a bit being 1 or 0 given the received sample. Assumes s = 1
 
     Args:
         y (float): received sample
@@ -123,20 +123,45 @@ def belief_propagation(H: gl.FieldArray, samples: gl.FieldArray, max_iter: int, 
                             # calculate product of adjacent q's
                             prod = 1
                             for i in range(N):
-                                if i == n:
+                                if i == n or H[m,i] == GF(0):
                                     continue
                                 prod *= q[element][m,i]
                             r[element][m,n] = prod
                             samples[n] = stored_sample
         
         # update q
-        for m in range(M):
-            for n in range(N):
-                if H[m,n] != GF(0):
-                    for element in range(p):
-                        
-                        
-                        
+        for m in range(M): # For each check node
+            for n in range(N): # And for each symbol node
+                if H[m,n] != GF(0): # If the check node is connected to the symbol node
+                    alpha = 0
+                    for element in range(p): # Then for each element in the Galois field
+                        alpha += q[element][m,n]
+                    alpha = 1/alpha # Calculate normalization factor
+                    for element in range(p): # Then for each element in the Galois field
+                        prod = 1
+                        for j in range(M): # For each check node
+                            if j == m or H[j,n] == GF(0):
+                                continue
+                            prod *= r[element][j,n] # Calculate product of adjacent r's
+                        likelihood = likelihood(samples[n],sigma,element)
+                        q[element][m,n] = alpha * prod * likelihood # Update q
+        
+        # Tentative decision
+        elements = [x for x in range(p)]
+        for n in range(N): # for each sample
+            check_probs = []
+            for element in range(p):
+                check_probs[element] = likelihood(samples[n],sigma,element)
+                for m in range(M):
+                    if H[m,n] != GF(0):
+                        check_probs[element] *= r[element][m,n] # Calculate product of adjacent r's
+            samples[n] = GF(elements.index(np.argmax(check_probs))) # Make decision
+        print(samples)
+        # Check if the tentative decision is a valid codeword
+        if np.all(np.dot(H,samples) == GF(0)):
+            return samples
+        else: # If not, continue decoding
+            iter += 1              
         
     decision = GF(np.zeros(N,dtype=int))         
     return decision
