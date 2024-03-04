@@ -5,7 +5,7 @@
       Department of Electrical and Computer Engineering
       Utah State University
       chris.winstead@usu.edu
-** Description: 
+** Description:
    Top header file for ldpcsim tool.
 ==========================================================================*/
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <cmath>
 #include <vector>
+#include <itpp/common/galois.h>
 using namespace std;
 
 #include "alist.h"
@@ -30,7 +31,7 @@ typedef double message_type;
 // Struct simparams for storing
 // global parameters:
 //================================
-typedef struct 
+typedef struct
 {
   // Stopping and reporting parameters:
   int iterations_per_frame;  // Maximum iterations per frame
@@ -95,7 +96,7 @@ void initializeQuantization()
 }
 
 double quantize(double Y)
-{ 
+{
   /*
   double rval = Y;
   if (rval > p.Ymax)
@@ -103,7 +104,7 @@ double quantize(double Y)
   else if (rval < -p.Ymax)
     rval = -p.Ymax;
   */
-  //double Qmax = pow(2.0,p.precision); 
+  //double Qmax = pow(2.0,p.precision);
 
   int k = 0;
   for (int i=0; i<p.Nq-1; i++)
