@@ -20,6 +20,8 @@
 #include "sc_vector.h"
 #include <iostream>
 #include <cmath>
+#include <vector>
+#include <algorithm>
 
 #include "ldpcsim.h"
 
@@ -48,12 +50,14 @@ class symnode : public sc_module
   SC_HAS_PROCESS(symnode);
   // NOTE: Here the theta parameter is passed as a pointer so that it can be globally adapted.
   symnode(sc_module_name name, int _dv, message_type _theta, message_type _lambda, double _sigma) : sc_module(name),
-    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma),
+    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), q(_q),
     from_check("from_check",_dv), to_check("to_check",_dv)
     {
       E = 0;
       x = 0;
       w = p.alpha*p.Ymax/dv;
+      b = int(log2(q));
+      sigma_sq = pow(sigma,2);
 
       // Declare node behavior method:
       SC_METHOD(behavior);
@@ -65,8 +69,11 @@ class symnode : public sc_module
  private:
   unsigned int dv;
   int x;
+  int b; // number of bits in field
+  int q; // field size, 2^b
   double E;
   double sigma;
+  double sigma_sq;
   double lambda;
   double theta;
   double local_theta;
@@ -80,13 +87,49 @@ class symnode : public sc_module
     //------------------------
     if (rst.read())
     {
+      local_theta = theta;
+      // calculate symbol likelihood, read in q bits
+      vector<double> soft_symbol;
+      for(int i = 0; i < b; i++){
+        soft_symbol.emplace_back(r.read()); //get soft symbol from channel, LSB at index 0
+      }
 
+      // calculate the likelihood for each symbol
+      sc_vector<message_type> probabalities;
+      double likelihood1;
+      for(int sym = 0; sym < q; sym++){
+        int temp_sym = sym;
+        int bit = 0;
+        double prob = 1.0;
+        for(int i=0; i<b; i++){
+          bit = temp_sym%2;
+          temp_sym/=2;
+          likelihood1 = 1/(1+exp(2*abs(soft_symbol[i])/sigma_sq));
+          prob = (bit==0)?(prob*(1-likelihood1)):(prob*likelihood1);
+        }
+        probabilities.emplace_back(prob);
+      }
+
+    // Write initial probabilities
+    for (int i=0; i<dv; i++){
+	    to_check[i].write(probabilities);
+    }
+
+    // Get initial decision
+    auto it = find(probabilites.begin(),probabilities.end(),max(probabilities));
+    int symbol = it-probabilities.begin();
+    if(symbol > 0){
+      d.write(false);
+    }else{
+      d.write(true);
+    }
 
     }
     //------------------------
     // Normal behavior:
     //------------------------
     else{
+      for()
 
     }
   }
