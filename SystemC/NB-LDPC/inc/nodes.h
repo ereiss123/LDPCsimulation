@@ -95,8 +95,9 @@ class symnode : public sc_module
       }
 
       // calculate the likelihood for each symbol
-      sc_vector<message_type> probabalities;
-      double likelihood1;
+
+      sc_vector<message_type> probabilities;
+      double likelihood;
       for(int sym = 0; sym < q; sym++){
         int temp_sym = sym;
         int bit = 0;
@@ -104,13 +105,13 @@ class symnode : public sc_module
         for(int i=0; i<b; i++){
           bit = temp_sym%2;
           temp_sym/=2;
-          likelihood1 = 1/(1+exp(2*abs(soft_symbol[i])/sigma_sq));
-          prob = (bit==0)?(prob*(1-likelihood1)):(prob*likelihood1);
+          likelihood = 1/(1+exp(2*abs(soft_symbol[i])/sigma_sq));
+          prob = (bit==0)?(prob*(1-likelihood)):(prob*likelihood);
         }
         probabilities.emplace_back(prob);
       }
 
-    // Write initial probabilities
+    // Write initial probabilities to all adjacent check nodes
     for (int i=0; i<dv; i++){
 	    to_check[i].write(probabilities);
     }
@@ -129,7 +130,28 @@ class symnode : public sc_module
     // Normal behavior:
     //------------------------
     else{
-      for()
+      // Need to figure out permutation
+
+
+      // update symbol probability for each symbol for each vector
+      vector<message_type> prob;
+      for(int i=0; i<dv; i++){
+        // Update vector i probabilities
+        prob.clear();
+        for(int j=0; j<dv; j++){
+          if(i != j){
+            for(int sym=0; sym<q; sym++){
+              if(prob.size() < 1){
+                prob.append(from_check[j][sym]);
+              }else{
+                prob[i][sym] *= from_check[j][sym]
+              }
+            }
+          }
+        }
+        // Write out probabilities
+        to_check[i].write(prob);
+      }
 
     }
   }
