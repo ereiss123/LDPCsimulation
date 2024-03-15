@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=/usr/local/systemc-2.3.3/lib-linux64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/reiss/systemc/lib-linux64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/reiss/it++4.3.0/lib:$LD_LIBRARY_PATH
 
 ALIST=codes/PegReg/PEGReg504x1008.alist
 DATA=codes/PegReg/data.enc

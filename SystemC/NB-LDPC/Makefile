@@ -51,7 +51,7 @@ DEBUG=yes
 # and SystemC headers.
 #SYSTEMC_LIB := $(SYSTEMC_HOME)/lib-$(TARGET_ARCH)
 TARGET_ARCH := linux64
-SYSTEMC_HOME := /usr/local/systemc-2.3.3
+SYSTEMC_HOME := /home/reiss/systemc
 SYSTEMC_LIB := $(SYSTEMC_HOME)/lib-$(TARGET_ARCH)
 
 #SYSTEMC_HOME := /Library/SystemC/Current
@@ -90,9 +90,10 @@ SRCDIRS := ./src
 #
 # additional include options
 EXTRA_INCLUDES := -I./inc/
+# EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
 #
 # additional library directories and link directives
-#EXTRA_LIBDIRS := -L/path/to/my/lib/dir
+# EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0
 #EXTRA_LIBS    := -lmylib
 
 # additional preprocessor symbols to define
@@ -114,7 +115,7 @@ EXTRA_INCLUDES := -I./inc/
 # only added to DEBUG builds
 #CXXFLAGS_DEBUG := -g
 # always added (useful for command-line overrides)
-#CXXFLAGS_EXTRA :=
+# CXXFLAGS_EXTRA := pkg-config --cflags itpp
 
 # additional target to clean up current test application
 #EXTRA_CLEAN=extra-clean

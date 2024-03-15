@@ -1,11 +1,10 @@
 #!/bin/bash
-
-export LD_LIBRARY_PATH=/usr/local/systemc-2.3.3/lib-linux64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/reiss/systemc/lib-linux64:$LD_LIBRARY_PATH
 
 ALIST=codes/PegReg/PEGReg504x1008.alist
 DATA=codes/PegReg/data.enc
 RATE=0.5
-SNR=4.0
+SNR=8.0
 ITERATIONS=1000
 INTERVAL=400
 LAMBDA=0.975
