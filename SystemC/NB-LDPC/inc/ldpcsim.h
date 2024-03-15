@@ -16,7 +16,7 @@
 #include <string>
 #include <cmath>
 #include <vector>
-#include <itpp/common/galois.h>
+#include <itpp/comm/galois.h>
 using namespace std;
 
 #include "alist.h"
@@ -24,7 +24,7 @@ using namespace std;
 // ===================================================================
 // Type for internal messages between check nodes and symbol nodes:
 // ===================================================================
-typedef double message_type;
+typedef vector<double> message_type;
 
 
 //================================

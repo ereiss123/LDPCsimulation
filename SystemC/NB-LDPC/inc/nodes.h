@@ -24,6 +24,7 @@
 #include <algorithm>
 
 #include "ldpcsim.h"
+#include <itpp/comm/galois.h>
 
 using namespace std;
 
@@ -31,17 +32,16 @@ using namespace std;
 #define VERBOSE false
 #define dblog(s) if (VERBOSE) {cout << s;}
 
-
 //=================================================
 // Symbol Node implementation
 //=================================================
 class symnode : public sc_module
 {
  public:
-  sc_vector<sc_in<double> >			        r;
-  sc_vector<sc_vector<sc_in<message_type> > >	from_check;  // Vector of symbol probability vectors
-  sc_vector<sc_vector<sc_out<message_type> > >	to_check;
-  sc_out<bool> 		          	d;
+  sc_in<double>		        r;
+  sc_vector<sc_in<message_type> >	from_check;  // Vector of symbol probability vectors
+  sc_vector<sc_out<message_type> >	to_check;
+  sc_out<int> 		          	d;
   sc_in<bool>				clk;
   sc_in<bool>				rst;
   // sc_in<double>                         rnd_in;
@@ -49,7 +49,7 @@ class symnode : public sc_module
 
   SC_HAS_PROCESS(symnode);
   // NOTE: Here the theta parameter is passed as a pointer so that it can be globally adapted.
-  symnode(sc_module_name name, int _dv, message_type _theta, message_type _lambda, double _sigma) : sc_module(name),
+  symnode(sc_module_name name, int _dv, double _theta, double _lambda, double _sigma, int _q) : sc_module(name),
     dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), q(_q),
     from_check("from_check",_dv), to_check("to_check",_dv)
     {
@@ -88,74 +88,84 @@ class symnode : public sc_module
     if (rst.read())
     {
       local_theta = theta;
-      // calculate symbol likelihood, read in q bits
+      // read in b bits, pack into a symbol
       vector<double> soft_symbol;
       for(int i = 0; i < b; i++){
         soft_symbol.emplace_back(r.read()); //get soft symbol from channel, LSB at index 0
       }
 
-      // calculate the likelihood for each symbol
 
-      sc_vector<message_type> probabilities;
+      // calculate the likelihood for each symbol
+      message_type probabilities;
       double likelihood;
+
       for(int sym = 0; sym < q; sym++){
         int temp_sym = sym;
         int bit = 0;
         double prob = 1.0;
+        // calculate the likelihood for each bit in the symbol
         for(int i=0; i<b; i++){
           bit = temp_sym%2;
-          temp_sym/=2;
+          temp_sym /= 2;
           likelihood = 1/(1+exp(2*abs(soft_symbol[i])/sigma_sq));
           prob = (bit==0)?(prob*(1-likelihood)):(prob*likelihood);
         }
         probabilities.emplace_back(prob);
       }
 
-    // Write initial probabilities to all adjacent check nodes
-    for (int i=0; i<dv; i++){
-	    to_check[i].write(probabilities);
-    }
+      // Write initial probabilities to all adjacent check nodes
+      for (int i=0; i<dv; i++){
+        to_check[i].write(probabilities);
+      }
 
-    // Get initial decision
-    auto it = find(probabilites.begin(),probabilities.end(),max(probabilities));
-    int symbol = it-probabilities.begin();
-    if(symbol > 0){
-      d.write(false);
-    }else{
-      d.write(true);
-    }
+      // Get initial decision
+      // find the index of the max probability
+      auto it = find(probabilities.begin(),probabilities.end(),max_element(probabilities.begin(),probabilities.end()));
+      // it is an address, subtract from the beginning address to get the index
+      int symbol = it-probabilities.begin();
+      d.write(symbol);
+      // if(symbol > 0){
+      //   d.write(false);
+      // }else{
+      //   d.write(true);
+      // }
 
     }
     //------------------------
     // Normal behavior:
     //------------------------
-    else{
-      // Need to figure out permutation
-
+    else
+    {
+      // TODO: Figure out permutation
 
       // update symbol probability for each symbol for each vector
-      vector<message_type> prob;
+      message_type prob;
       for(int i=0; i<dv; i++){
-        // Update vector i probabilities
-        prob.clear();
-        for(int j=0; j<dv; j++){
-          if(i != j){
-            for(int sym=0; sym<q; sym++){
-              if(prob.size() < 1){
-                prob.append(from_check[j][sym]);
-              }else{
-                prob[i][sym] *= from_check[j][sym]
-              }
-            }
+        message_type in = from_check[i].read();
+        for(int sym=0; sym < q; sym++){ // loop through each element of GF(q)
+          if(prob.size() < q){ // initial pass
+            prob.emplace_back(in[sym]);
+          }else{
+            prob[sym] *= in[sym];
           }
         }
-        // Write out probabilities
+      }
+
+      // Write out probabilities
+      for(int i=0; i<dv; i++){
         to_check[i].write(prob);
       }
 
+      // Update symbol node decision
+      // find the index of the max probability
+      auto it = find(prob.begin(),prob.end(),max_element(prob.begin(),prob.end()));
+      // 'it' is an address, subtract from the beginning address to get the index
+      int symbol = it-probabilities.begin();
+      d.write(symbol);
     }
-  }
-};
+
+  } // end behavior
+}; // end symnode class
 
 
 //=================================================
@@ -164,8 +174,8 @@ class symnode : public sc_module
 class checknode : public sc_module
 {
  public:
-  sc_vector<sc_vector<sc_out<message_type > > >	from_check;
-  sc_vector<sc_vector<sc_in<message_type > > >	to_check;
+  sc_vector<sc_out<message_type > > 	from_check;
+  sc_vector<sc_in<message_type > > 	to_check;
   sc_out<bool>				stop;
   sc_in<bool>				clk;
   sc_in<bool>				rst;
@@ -201,23 +211,23 @@ class checknode : public sc_module
     // Normal behavior:
     //------------------------
 
-  //   dblog("ChkNode: In=");
-  //   int prod = 1;
+    dblog("ChkNode: In=");
+    int prod = 1;
 
-  //   for (int i=0; i<dc; i++){
-  //     dblog(to_check[i].read() << ", ");
-  //     prod *= to_check[i].read();
-  //   }
+    for (int i=0; i<dc; i++){
+      dblog(to_check[i].read() << ", ");
+      prod *= to_check[i].read();
+    }
 
-  //   dblog("prod=" << prod << endl);
+    dblog("prod=" << prod << endl);
 
-  //   for (int i=0; i<dc; i++)
-  //     from_check[i].write(prod);
+    for (int i=0; i<dc; i++)
+      from_check[i].write(prod);
 
-  //   if (prod==1)
-  //     stop.write(true);
-  //   else
-  //     stop.write(false);
+    if (prod==1)
+      stop.write(true);
+    else
+      stop.write(false);
   }
 
 };
