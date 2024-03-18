@@ -5,7 +5,7 @@
       Department of Electrical and Computer Engineering
       Utah State University
       chris.winstead@usu.edu
-** Description: 
+** Description:
 
 ==============================================================================================*/
 
@@ -33,9 +33,9 @@ int sc_main(int argc, char * argv[])
 
   // -----------------------------------------
   // Declare Top-Level Signals:
-  // ----------------------------------------- 
+  // -----------------------------------------
   sc_vector<sc_signal<message_type > >	 y("y",p.N);
-  sc_vector<sc_signal<bool>  >	     	 d("d",p.N);      
+  sc_vector<sc_signal<bool>  >	     	 d("d",p.N);
   sc_signal<bool>	     		 rst;
   sc_signal<bool>                        ready;
   sc_signal<bool>                        finished;
@@ -43,14 +43,14 @@ int sc_main(int argc, char * argv[])
 
   // Testbench modules:
   LDPC_testbench	tb("tb");
-  decoder              dec("dec");
-  
+  decoder         dec("dec");
+
 
   // -----------------------------------------
   // Connect global clock and reset signals,
   // and the main input/output signals:
   // -----------------------------------------
-  
+
   for (int i=0; i<p.N; i++)
   {
     tb.y[i](y[i]);
@@ -108,13 +108,13 @@ void get_arguments(int argc, char * argv[])
     p.M = p.alist.N;
     p.dv = p.alist.biggest_num_m;
     p.dc = p.alist.biggest_num_n;
-    
+
     p.nEdges = 0;
     for (int i=0; i<p.N; i++)
     {
       p.nEdges += p.alist.num_mlist[i];
     }
-    p.N0 = (1/p.Rate)*pow(10.0, -p.SNR/10.0);	
+    p.N0 = (1/p.Rate)*pow(10.0, -p.SNR/10.0);
     p.sigma = sqrt(p.N0/2.0);
 
     p.Nq = pow(2.0,p.precision);
@@ -129,8 +129,8 @@ void get_arguments(int argc, char * argv[])
 void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations)
 {
   ofstream result_file(p.fname.c_str(),ios::app);
-  result_file <<endl << (double)errors/totalbits << "\t" << (double)word_errors/total_words << "\t" 
-	      << (double)totalIterations/total_words << "\t" 
+  result_file <<endl << (double)errors/totalbits << "\t" << (double)word_errors/total_words << "\t"
+	      << (double)totalIterations/total_words << "\t"
 	      << p.SNR << "\t" << errors << "\t" << totalbits << "\t" << word_errors
 	      << "\t" << total_words << "\t" << p.theta << "\t" <<  p.lambda << "\t" << p.precision << "\t" << p.Ymax << "\t" << p.alpha;
   result_file.close();
