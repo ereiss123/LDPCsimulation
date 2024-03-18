@@ -123,6 +123,7 @@ class symnode : public sc_module
       auto it = find(probabilities.begin(),probabilities.end(),max_element(probabilities.begin(),probabilities.end()));
       // it is an address, subtract from the beginning address to get the index
       int symbol = it-probabilities.begin();
+      dblog(it << "\t" << probabilities.begin() << "\t" << symbol << endl);
       d.write(symbol);
       // if(symbol > 0){
       //   d.write(false);
@@ -161,6 +162,7 @@ class symnode : public sc_module
       auto it = find(prob.begin(),prob.end(),max_element(prob.begin(),prob.end()));
       // 'it' is an address, subtract from the beginning address to get the index
       int symbol = it-probabilities.begin();
+      dblog(it << "\t" << probabilities.begin() << "\t" << symbol << endl);
       d.write(symbol);
     }
 
@@ -211,15 +213,14 @@ class checknode : public sc_module
     // Normal behavior:
     //------------------------
 
-    dblog("ChkNode: In=");
-    int prod = 1;
-
+    // Collect all neighboring messages into a matrix
+    vector<message_type> to_check_mat;
     for (int i=0; i<dc; i++){
-      dblog(to_check[i].read() << ", ");
-      prod *= to_check[i].read();
+      to_check_mat.emplace_back(to_check[i].read());
     }
 
-    dblog("prod=" << prod << endl);
+
+
 
     for (int i=0; i<dc; i++)
       from_check[i].write(prod);

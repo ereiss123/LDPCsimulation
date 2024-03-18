@@ -93,8 +93,8 @@ EXTRA_INCLUDES := -I./inc/
 # EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
 #
 # additional library directories and link directives
-# EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0
-#EXTRA_LIBS    := -lmylib
+EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0/lib
+EXTRA_LIBS    := -litpp
 
 # additional preprocessor symbols to define
 # (as list of -Dmacro[=defn])
@@ -115,7 +115,7 @@ EXTRA_INCLUDES := -I./inc/
 # only added to DEBUG builds
 #CXXFLAGS_DEBUG := -g
 # always added (useful for command-line overrides)
-# CXXFLAGS_EXTRA := pkg-config --cflags itpp
+CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
 
 # additional target to clean up current test application
 #EXTRA_CLEAN=extra-clean
