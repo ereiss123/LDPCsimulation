@@ -38,7 +38,7 @@ using namespace std;
 class symnode : public sc_module
 {
  public:
-  sc_in<double>		        r;
+  sc_in<vector<bool> >		        r;
   sc_vector<sc_in<message_type> >	from_check;  // Vector of symbol probability vectors
   sc_vector<sc_out<message_type> >	to_check;
   sc_out<int> 		          	d;
@@ -50,7 +50,7 @@ class symnode : public sc_module
   SC_HAS_PROCESS(symnode);
   // NOTE: Here the theta parameter is passed as a pointer so that it can be globally adapted.
   symnode(sc_module_name name, int _dv, double _theta, double _lambda, double _sigma, int _q) : sc_module(name),
-    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), q(_q),
+    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), q(_q), r(q),
     from_check("from_check",_dv), to_check("to_check",_dv)
     {
       E = 0;
@@ -90,9 +90,9 @@ class symnode : public sc_module
       local_theta = theta;
       // read in b bits, pack into a symbol
       vector<double> soft_symbol;
-      for(int i = 0; i < b; i++){
-        soft_symbol.emplace_back(r.read()); //get soft symbol from channel, LSB at index 0
-      }
+      // for(int i = 0; i < b; i++){
+      soft_symbol = r.read(); //get soft symbol from channel, LSB at index 0
+      // }
 
 
       // calculate the likelihood for each symbol
