@@ -116,6 +116,7 @@ EXTRA_LIBS    := -litpp
 #CXXFLAGS_DEBUG := -g
 # always added (useful for command-line overrides)
 CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
+CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
 
 # additional target to clean up current test application
 #EXTRA_CLEAN=extra-clean
