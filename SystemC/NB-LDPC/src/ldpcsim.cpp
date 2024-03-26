@@ -136,5 +136,28 @@ void append_result_to_data_file(unsigned int errors, unsigned int totalbits, uns
   result_file.close();
 }
 
+//==================================
+// GENERATE GF(q) LOOKUP TABLE
+//==================================
+
+void generate_LUT()
+{
+  itpp::GF z = itpp::GF(p.alist.q); // return 0th element
+  // iterate over every symbol combination
+  for(int i = 0; i < p.alist.q < i++)
+  {
+    itpp::GF i_gf = itpp::GF(p.alist.q,i);
+    for(int j = 0; j < p.alist.q; j++)
+    {
+      itpp::GF GF_j = itpp::GF(p.alist.q,j);
+      if(GF_j + GF_i == z)
+      {
+        vector<int> idxs;
+        idxs.emplace_back(i,j);
+        p.LUT.emplace_back(idxs);
+      }
+    }
+  }
+}
 
 

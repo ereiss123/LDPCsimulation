@@ -18,6 +18,7 @@
 #include <vector>
 #include <itpp/comm/galois.h>
 using namespace std;
+using namespace itpp;
 
 #include "alist.h"
 
@@ -64,6 +65,9 @@ typedef struct
   double        Ymax;         // Maximum magnitude for quantization
   unsigned int  nEdges;       // Total number of edges in the code graph
   double        alpha;        // Syndrome weight parameter
+
+  // Galois paramaters
+  vector<vector<int> > LUT;   // combination lookup table
 } simparams;
 
 // Declare a global parameter struct available to all modules:
@@ -76,7 +80,7 @@ extern vector<double> qvalues;
 //=============================
 void get_arguments(int argc, char * argv[]);
 void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations);
-
+void generate_LUT(void);
 
 //---------------------------------------------------
 // quantize function
