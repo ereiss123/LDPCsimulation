@@ -3,7 +3,7 @@
 ** By Chris Winstead
    Based on original code by Radford Neal and David MacKay
 
-** Description: 
+** Description:
    Defines struct and functions for processing "alist" files, which
    represent the locations of 1's in a large sparse binary matrix.
    The alist file is typically used to specify LDPC codes.
@@ -21,16 +21,16 @@
 alist_struct loadFile(const char * fileName)
 {
   int i;
-  FILE * theFile = fopen(fileName, "r");  
+  FILE * theFile = fopen(fileName, "r");
   alist_struct alist;
 
-  fscanf(theFile, "%d %d\n", &alist.N, &alist.M);
+  fscanf(theFile, "%d %d %d\n", &alist.N, &alist.M, &alist.q);
   fscanf(theFile, "%d %d\n", &alist.biggest_num_n, &alist.biggest_num_m);
 
   alist.num_nlist = (int *) malloc((alist.N)*sizeof(int));
   alist.num_mlist = (int *) malloc((alist.M)*sizeof(int));
-  fread_ivector ( alist.num_nlist , 0 , alist.N-1 , theFile ) ; 
-  fread_ivector ( alist.num_mlist , 0 , alist.M-1  , theFile) ; 
+  fread_ivector ( alist.num_nlist , 0 , alist.N-1 , theFile ) ;
+  fread_ivector ( alist.num_mlist , 0 , alist.M-1  , theFile) ;
 
 
   alist.nlist = (int **) malloc(alist.N*sizeof(int *));
@@ -41,8 +41,8 @@ alist_struct loadFile(const char * fileName)
     alist.mlist[i] = (int *) malloc(alist.biggest_num_m*sizeof(int));
 
 
-  fread_imatrix ( alist.nlist , 1 , alist.N , 1 , alist.biggest_num_n, theFile ) ; 
-  fread_imatrix ( alist.mlist , 1 , alist.M , 1 , alist.biggest_num_m, theFile ) ; 
+  fread_imatrix ( alist.nlist , 1 , alist.N , 1 , alist.biggest_num_n, theFile ) ;
+  fread_imatrix ( alist.mlist , 1 , alist.M , 1 , alist.biggest_num_m, theFile ) ;
 
   return alist;
 }
@@ -50,7 +50,7 @@ alist_struct loadFile(const char * fileName)
 
 void printAlist(alist_struct alist)
 {
-  printf("%d %d\n", alist.N, alist.M);
+  printf("%d %d %d\n", alist.N, alist.M, alist.q);
   printf("%d %d\n", alist.biggest_num_n, alist.biggest_num_m);
 
   int i, j;

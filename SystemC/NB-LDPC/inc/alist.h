@@ -3,7 +3,7 @@
 ** By Chris Winstead
    Based on original code by Radford Neal and David MacKay
 
-** Description: 
+** Description:
    Defines struct and functions for processing "alist" files, which
    represent the locations of 1's in a large sparse binary matrix.
    The alist file is typically used to specify LDPC codes.
@@ -28,11 +28,12 @@ typedef struct {
 	int *u_up_to ;
 	int *norder ;
 	int biggest_num_m ;       /* actual biggest sizes */
-	int biggest_num_n ; 
+	int biggest_num_n ;
 	int biggest_num_m_alloc ; /* sizes used for memory allocation */
-	int biggest_num_n_alloc ; 
-	int tot ; 
+	int biggest_num_n_alloc ;
+	int tot ;
 	int same_length ;  /* whether all vectors in mlist and nlist have same length */
+	int q; /*Order of the Galois field*/
 } alist_struct ;
 
 
