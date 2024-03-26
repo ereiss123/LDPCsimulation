@@ -93,8 +93,8 @@ EXTRA_INCLUDES := -I./inc/
 # EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
 #
 # additional library directories and link directives
-EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0/lib
-EXTRA_LIBS    := -litpp
+EXTRA_LIBDIRS := "-L/home/reiss/it++4.3.0/lib"
+EXTRA_LIBS    := "-litpp"
 
 # additional preprocessor symbols to define
 # (as list of -Dmacro[=defn])
