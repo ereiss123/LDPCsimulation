@@ -16,7 +16,7 @@
 #include <string>
 #include <cmath>
 #include <vector>
-#include <itpp/comm/galois.h>
+#include "itpp/comm/galois.h"
 using namespace std;
 using namespace itpp;
 
