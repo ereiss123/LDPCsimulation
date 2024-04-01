@@ -81,6 +81,7 @@ extern vector<double> qvalues;
 void get_arguments(int argc, char * argv[]);
 void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations);
 void generate_LUT(void);
+inline int index(int GF_val){ return GF_val+1; }
 
 //---------------------------------------------------
 // quantize function
