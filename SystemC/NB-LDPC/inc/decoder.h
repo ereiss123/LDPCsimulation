@@ -64,7 +64,7 @@ struct checknode_creator
   //-------------------------------------------
   // TOP-LEVEL IO for the DECODER:
   //-------------------------------------------
-  sc_vector<sc_in<double> >             y;        // Input from channel
+  sc_vector<sc_in<message_type> >             y;        // Input from channel
   sc_vector<sc_out<int> >               d;        // Decisions
   sc_in<bool>                           clk;      // Clock
   sc_in<bool>                           rst;      // Reset (new frame available)
