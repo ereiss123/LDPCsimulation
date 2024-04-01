@@ -89,12 +89,17 @@ SRCDIRS := ./src
 # Other variables, that can be set here
 #
 # additional include options
-EXTRA_INCLUDES := -I./inc/
-# EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
+# EXTRA_INCLUDES := '-I/home/reiss/git-clones/LDPCsimulation/SystemC/NB-LDPC/inc -I/home/reiss/it++4.3.0/include -I./inc'
+EXTRA_INCLUDES :=-I/home/reiss/git-clones/LDPCsimulation/SystemC/NB-LDPC/inc
+EXTRA_INCLUDES +=-I/home/reiss/it++4.3.0/include
+
 #
 # additional library directories and link directives
-EXTRA_LIBDIRS := "-L/home/reiss/it++4.3.0/lib"
-EXTRA_LIBS    := "-litpp"
+# EXTRA_LIBDIRS := "-L/home/reiss/it++4.3.0/lib"
+# EXTRA_LIBS    := "-litpp"
+
+ EXTRA_LIBDIRS='-L/home/reiss/it++4.3.0/lib'
+ EXTRA_LIBS='-litpp'
 
 # additional preprocessor symbols to define
 # (as list of -Dmacro[=defn])
@@ -115,8 +120,9 @@ EXTRA_LIBS    := "-litpp"
 # only added to DEBUG builds
 #CXXFLAGS_DEBUG := -g
 # always added (useful for command-line overrides)
-CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
-CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
+#CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
+#CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
+#CXXFLAGS_EXTRA := '-I/home/reiss/it++4.3.0/include -O3 -DNDEBUG'
 
 # additional target to clean up current test application
 #EXTRA_CLEAN=extra-clean
