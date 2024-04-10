@@ -25,6 +25,9 @@
 /*	ANSI Version 1 	*/
 /* 9 6 92 */
 
+#ifndef R_H
+#define R_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -177,4 +180,6 @@ float ran3(int*) ;
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

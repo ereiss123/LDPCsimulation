@@ -90,11 +90,12 @@ SRCDIRS := ./src
 #
 # additional include options
 EXTRA_INCLUDES := -I./inc/
-# EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
+#EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
 #
 # additional library directories and link directives
-EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0/lib
-EXTRA_LIBS    := -litpp
+#EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0/lib
+#EXTRA_LIBS    := -litpp
+EXTRA_LIBS := `itpp-config --libs`
 
 # additional preprocessor symbols to define
 # (as list of -Dmacro[=defn])
@@ -102,7 +103,7 @@ EXTRA_LIBS    := -litpp
 
 # -----------------------------------------------------------------------
 # compiler to use
-#CXX   := =g++
+CXX   := g++
 #
 # compiler flags (defaults shown below)
 #
@@ -115,8 +116,9 @@ EXTRA_LIBS    := -litpp
 # only added to DEBUG builds
 #CXXFLAGS_DEBUG := -g
 # always added (useful for command-line overrides)
-CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
-CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
+#CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
+#CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
+CXXFLAGS_EXTRA := `itpp-config --cflags` -fdiagnostics-color
 
 # additional target to clean up current test application
 #EXTRA_CLEAN=extra-clean
@@ -140,4 +142,8 @@ else
 $(error Common SystemC Makefile 'systemc.mk' not found! Bailing out)
 endif
 
+tests: tests/bin/alist_test
+
+tests/bin/alist_test: inc/alist.h src/alist.cpp tests/alist_test.cpp
+	g++ -Iinc/ src/nrutil.cpp src/r.cpp src/alist.cpp tests/alist_test.cpp -o tests/bin/alist_test && tests/bin/alist_test 
 # Taf!

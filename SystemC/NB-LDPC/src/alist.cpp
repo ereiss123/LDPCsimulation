@@ -1,17 +1,19 @@
 /*==========================================================================================
 ** alist.cpp
-** By Chris Winstead
-   Based on original code by Radford Neal and David MacKay
-
+**
+** Date: March, 2024
+**
+** Authors: Eric Reiss, Chris Winstead
+**          Utah State University
+**
+** Based on original source by Radford Neal and David MacKay
+**
 ** Description:
-   Defines struct and functions for processing "alist" files, which
-   represent the locations of 1's in a large sparse binary matrix.
-   The alist file is typically used to specify LDPC codes.
-
-** Usage:
-    ldpcsim <alist_fname> <stim_fname> <iterations> <clock_cycles> <vcd_fname>
+**   Defines struct and functions for processing non-binary "alist" files, 
+**   which represent the positions and values of non-zero elements in a 
+**   sparse matrix. The alist file is typically used to specify NB-LDPC 
+**   codes.
 ==============================================================================================*/
-
 
 #include "alist.h"
 #include <stdio.h>
@@ -35,14 +37,20 @@ alist_struct loadFile(const char * fileName)
 
   alist.nlist = (int **) malloc(alist.N*sizeof(int *));
   alist.mlist = (int **) malloc(alist.M*sizeof(int *));
-  for (i=0; i<alist.N; i++)
+  alist.nvals = (int **) malloc(alist.N*sizeof(int *));
+  alist.mvals = (int **) malloc(alist.M*sizeof(int *));
+  
+  for (i=0; i<alist.N; i++) {
     alist.nlist[i] = (int *) malloc(alist.biggest_num_n*sizeof(int));
-  for (i=0; i<alist.M; i++)
+    alist.nvals[i] = (int *) malloc(alist.biggest_num_n*sizeof(int));
+  }
+  for (i=0; i<alist.M; i++) {
     alist.mlist[i] = (int *) malloc(alist.biggest_num_m*sizeof(int));
+    alist.mvals[i] = (int *) malloc(alist.biggest_num_m*sizeof(int));
+  }
 
-
-  fread_imatrix ( alist.nlist , 1 , alist.N , 1 , alist.biggest_num_n, theFile ) ;
-  fread_imatrix ( alist.mlist , 1 , alist.M , 1 , alist.biggest_num_m, theFile ) ;
+  fread_nbmatrix ( alist.nlist , alist.nvals, 1 , alist.N , 1 , alist.biggest_num_n, theFile ) ;
+  fread_nbmatrix ( alist.mlist , alist.mvals , 1 , alist.M , 1 , alist.biggest_num_m, theFile ) ;
 
   return alist;
 }
@@ -83,4 +91,34 @@ void freeAlist(alist_struct alist)
 
   free(alist.num_mlist);
   free(alist.num_nlist);
+}
+
+
+int fread_nbmatrix 
+(
+ int **b ,
+ int **c ,
+ int l1,
+ int h1,
+ int l2,
+ int h2,
+ FILE *fp 
+)
+{
+  int	i, j , status = 0;
+
+  for (i=l1; i<=h1; i++){
+    for (j=l2; j<=h2; j++){
+      if ( fscanf(fp,"%d ",&b[i-1][j-1]) == EOF ) {
+	status -- ;
+	break;
+      }
+      if ( fscanf(fp,"%d ",&c[i-1][j-1]) == EOF ) {
+	status -- ;
+	break;
+      }
+    }
+    if ( status < 0 ) break ;
+  }
+  return status ;
 }

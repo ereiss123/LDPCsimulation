@@ -1,6 +1,13 @@
 /*==========================================================================================
 ** ldpcsim.cpp
-** Date: Sept, 2011
+**
+** Date: March, 2024
+**
+** Authors: Eric Reiss, Chris Winstead
+**          Utah State University
+**
+** Based on original source from
+** Sept, 2011
 ** By Chris Winstead
       Department of Electrical and Computer Engineering
       Utah State University
@@ -21,8 +28,7 @@
 
 // Global simulation parameters:
 simparams p;
-vector<double> qthresholds;
-vector<double> qvalues;
+
 
 //=====================================
 // SC_MAIN BODY
@@ -34,15 +40,15 @@ int sc_main(int argc, char * argv[])
   // -----------------------------------------
   // Declare Top-Level Signals:
   // -----------------------------------------
-  sc_vector<sc_signal<message_type > >	 y("y",p.N);
-  sc_vector<sc_signal<bool>  >	     	 d("d",p.N);
+  sc_vector<sc_signal<double> >	         y("y",p.N)*p.q;  // binary bits
+  sc_vector<sc_signal<int>  >	     	 d("d",p.N);      // GF(q) decisions
   sc_signal<bool>	     		 rst;
   sc_signal<bool>                        ready;
   sc_signal<bool>                        finished;
   sc_clock				 clk("clock", 10, SC_NS);
 
   // Testbench modules:
-  LDPC_testbench	tb("tb");
+  LDPC_testbench  tb("tb");
   decoder         dec("dec");
 
 
@@ -51,10 +57,14 @@ int sc_main(int argc, char * argv[])
   // and the main input/output signals:
   // -----------------------------------------
 
-  for (int i=0; i<p.N; i++)
+  for (int i=0; i<p.N*p.q; i++)
   {
     tb.y[i](y[i]);
     dec.y[i](y[i]);
+  }
+  
+  for (int i=0; i<p.N; i++)
+  {
     tb.d[i](d[i]);
     dec.d[i](d[i]);
   }
@@ -83,7 +93,15 @@ void get_arguments(int argc, char * argv[])
 {
   if (argc != 13)
   {
-    cout << "Usage: \n\t" << argv[0] << " <alist_fname> <stim_fname> <code_rate> <SNR> <iterations> <report_interval> <lambda> <theta> <precision> <Ymax> <alpha> <log_fname>\n";
+    cout << "Usage: \n\t"
+	 << argv[0]
+	 << " <alist_fname> "
+	 << "<stim_fname> "
+	 << "<code_rate> "
+	 << "<SNR> "
+	 << "<iterations> "
+	 << "<report_interval> "
+	 << "<log_fname>\n";
     exit(0);
   }
   else
@@ -94,11 +112,6 @@ void get_arguments(int argc, char * argv[])
     p.SNR = atof(argv[4]);
     p.iterations_per_frame = atoi(argv[5]);
     p.total_clock_cycles = atoi(argv[6]);
-    p.lambda = atof(argv[7]);
-    p.theta = atof(argv[8]);
-    p.precision = atoi(argv[9]);
-    p.Ymax = atof(argv[10]);
-    p.alpha = atof(argv[11]);
 
     stringstream ss;
     ss << argv[12] << ".dat";
@@ -117,8 +130,6 @@ void get_arguments(int argc, char * argv[])
     p.N0 = (1/p.Rate)*pow(10.0, -p.SNR/10.0);
     p.sigma = sqrt(p.N0/2.0);
 
-    p.Nq = pow(2.0,p.precision);
-    initializeQuantization();
   }
 }
 
@@ -129,10 +140,15 @@ void get_arguments(int argc, char * argv[])
 void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations)
 {
   ofstream result_file(p.fname.c_str(),ios::app);
-  result_file <<endl << (double)errors/totalbits << "\t" << (double)word_errors/total_words << "\t"
+  result_file << endl
+	      << (double)errors/totalbits << "\t"
+	      << (double)word_errors/total_words << "\t"
 	      << (double)totalIterations/total_words << "\t"
-	      << p.SNR << "\t" << errors << "\t" << totalbits << "\t" << word_errors
-	      << "\t" << total_words << "\t" << p.theta << "\t" <<  p.lambda << "\t" << p.precision << "\t" << p.Ymax << "\t" << p.alpha;
+	      << p.SNR << "\t"
+	      << errors << "\t"
+	      << totalbits << "\t"
+	      << word_errors << "\t"
+	      << total_words;
   result_file.close();
 }
 

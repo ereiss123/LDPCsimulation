@@ -1,6 +1,13 @@
 /*=========================================================================
 ** nodes.h
-** Date: Sept, 2011
+**
+** Date: March, 2024
+**
+** Authors: Eric Reiss, Chris Winstead
+**          Utah State University
+**
+** Based on original source from
+** Sept, 2011
 ** By Chris Winstead
       Department of Electrical and Computer Engineering
       Utah State University
@@ -38,46 +45,38 @@ using namespace std;
 class symnode : public sc_module
 {
  public:
-  sc_in<vector<bool> >		        r;
+  sc_in<vector<message_type> >		r;           // Channel information
   sc_vector<sc_in<message_type> >	from_check;  // Vector of symbol probability vectors
   sc_vector<sc_out<message_type> >	to_check;
   sc_out<int> 		          	d;
   sc_in<bool>				clk;
   sc_in<bool>				rst;
-  // sc_in<double>                         rnd_in;
-  // sc_out<double>                        rnd_out;
 
+  
   SC_HAS_PROCESS(symnode);
-  // NOTE: Here the theta parameter is passed as a pointer so that it can be globally adapted.
-  symnode(sc_module_name name, int _dv, double _theta, double _lambda, double _sigma, int _q) : sc_module(name),
-    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), q(_q), r(q),
-    from_check("from_check",_dv), to_check("to_check",_dv)
+  
+  symnode(sc_module_name name,
+	  int    _dv,
+	  int    _q) : sc_module(name),
+		       dv(_dv),
+		       q(_q), 
+		       from_check("from_check",_dv),
+		       to_check("to_check",_dv)
     {
-      E = 0;
-      x = 0;
-      w = p.alpha*p.Ymax/dv;
+      
       b = int(log2(q));
-      sigma_sq = pow(sigma,2);
 
       // Declare node behavior method:
       SC_METHOD(behavior);
       sensitive << clk.pos();
-
-      // rnd_out.initialize(0.0);
     }
 
  private:
   unsigned int dv;
-  int x;
-  int b; // number of bits in field
-  int q; // field size, 2^b
-  double E;
-  double sigma;
-  double sigma_sq;
-  double lambda;
-  double theta;
-  double local_theta;
-  double w;
+    
+  int b;    // number of bits in field
+  int q;    // field size, 2^b
+
 
   //************* SYMNODE BEHAVIOR *********************//
   void behavior()
@@ -87,15 +86,16 @@ class symnode : public sc_module
     //------------------------
     if (rst.read())
     {
-      local_theta = theta;
-      // read in b bits, pack into a symbol
-      vector<double> soft_symbol;
-      // for(int i = 0; i < b; i++){
-      soft_symbol = r.read(); //get soft symbol from channel, LSB at index 0
-      // }
 
+      message_type soft_symbol;      
+      soft_symbol = r.read(); 
 
-      // calculate the likelihood for each symbol
+      
+      /* move this out to another module, so the symnode's "soft_symbol"
+	 input is already a message_type containing probabilities, so the 
+	 nodes only ever work with message_type inputs and outputs.
+
+      // calculate the likelihood for each symbol	 
       message_type probabilities;
       double likelihood;
 
@@ -112,26 +112,23 @@ class symnode : public sc_module
         }
         probabilities.emplace_back(prob);
       }
+      */
+      
 
       // Write initial probabilities to all adjacent check nodes
       for (int i=0; i<dv; i++){
-        to_check[i].write(probabilities);
+        to_check[i].write(soft_symbol);
       }
 
       // Get initial decision
       // find the index of the max probability
-      auto it = find(probabilities.begin(),probabilities.end(),max_element(probabilities.begin(),probabilities.end()));
+      auto it = find(soft_symbol.begin(),soft_symbol.end(),max_element(soft_symbol.begin(),soft_symbol.end()));
       // it is an address, subtract from the beginning address to get the index
-      int symbol = it-probabilities.begin();
-      dblog(it << "\t" << probabilities.begin() << "\t" << symbol << endl);
+      int symbol = it-soft_symbol.begin();
+      dblog(it << "\t" << soft_symbol.begin() << "\t" << symbol << endl);
       d.write(symbol);
-      // if(symbol > 0){
-      //   d.write(false);
-      // }else{
-      //   d.write(true);
-      // }
-
     }
+    
     //------------------------
     // Normal behavior:
     //------------------------
@@ -183,7 +180,11 @@ class checknode : public sc_module
   sc_in<bool>				rst;
 
   SC_HAS_PROCESS(checknode);
-  checknode(sc_module_name name, int _dc) : sc_module(name), dc(_dc),from_check("from_check",_dc), to_check("to_check",_dc)
+  checknode(sc_module_name name,
+	    int _dc) : sc_module(name),
+		       dc(_dc),
+		       from_check("from_check",_dc),
+		       to_check("to_check",_dc)
   {
     SC_METHOD(behavior);
     for (int i=0; i<dc; i++)
@@ -218,8 +219,6 @@ class checknode : public sc_module
     for (int i=0; i<dc; i++){
       to_check_mat.emplace_back(to_check[i].read());
     }
-
-
 
 
     for (int i=0; i<dc; i++)
