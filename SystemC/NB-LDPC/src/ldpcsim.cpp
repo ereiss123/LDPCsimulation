@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 // Global simulation parameters:
 simparams p;
@@ -152,5 +153,31 @@ void append_result_to_data_file(unsigned int errors, unsigned int totalbits, uns
   result_file.close();
 }
 
+//==================================
+// GENERATE GF(q) LOOKUP TABLE
+//==================================
+
+void generate_LUT()
+{
+  itpp::GF z = itpp::GF(p.alist.q); // return 0th element
+  // iterate over every symbol combination
+  for(int i = 0; i < p.alist.q ; i++)
+  {
+    itpp::GF GF_i(p.alist.q,i);
+    vector<int> idxs;
+
+    itpp::GF i_gf = itpp::GF(p.alist.q,i);
+    for(int j = 0; j < p.alist.q; j++)
+    {
+      itpp::GF GF_j(p.alist.q,j);
+      if(GF_j + GF_i == z)
+      {
+        pair<int,int> elements(i,j);
+        idxs.emplace_back(elements);
+      }
+    }
+    p.LUT.emplace_back(idxs);
+  }
+}
 
 

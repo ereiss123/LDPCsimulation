@@ -5,9 +5,9 @@
       Department of Electrical and Computer Engineering
       Utah State University
       chris.winstead@usu.edu
-** Description: 
+** Description:
    Contains module definitions for symnode and checknode.
-   These models use the min-sum algorithm. Symnodes and 
+   These models use the min-sum algorithm. Symnodes and
    checknodes are latched on opposite clock phases. Latches
    are used on both node types in order to prevent glitch
    propagation on the interleaver.
@@ -20,7 +20,7 @@
 #include "sc_vector.h"
 #include <iostream>
 #include <cmath>
-
+#include <itpp/comm/galois.h>
 #include "ldpcsim.h"
 
 using namespace std;
@@ -47,8 +47,8 @@ class symnode : public sc_module
 
   SC_HAS_PROCESS(symnode);
   // NOTE: Here the theta parameter is passed as a pointer so that it can be globally adapted.
-  symnode(sc_module_name name, int _dv, message_type _theta, message_type _lambda, double _sigma) : sc_module(name), 
-    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma), 
+  symnode(sc_module_name name, int _dv, message_type _theta, message_type _lambda, double _sigma) : sc_module(name),
+    dv(_dv), theta(_theta), lambda(_lambda), sigma(_sigma),
     from_check("from_check",_dv), to_check("to_check",_dv)
     {
       E = 0;
@@ -61,7 +61,7 @@ class symnode : public sc_module
 
       rnd_out.initialize(0.0);
     }
- 
+
  private:
   unsigned int dv;
   int x;
@@ -71,7 +71,7 @@ class symnode : public sc_module
   double theta;
   double local_theta;
   double w;
-  
+
   //************* SYMNODE BEHAVIOR *********************//
   void behavior()
   {
@@ -85,19 +85,19 @@ class symnode : public sc_module
 	local_theta = theta;
 	if (r.read() > 0)
 	  x = 1;
-	else 
+	else
 	  x = -1;
 	E = x*r.read();
-	
+
 	// Write out messages to adjacent check nodes:
 	for (int i=0; i<dv; i++)
-	  to_check[i].write(x);       
-	
+	  to_check[i].write(x);
+
 	// Write out initial decisions:
 	if(x > 0)
 	  d.write(false);
 	else
-	  d.write(true);	
+	  d.write(true);
       }
     //------------------------
     // Normal behavior:
@@ -111,15 +111,15 @@ class symnode : public sc_module
 	rnd_out.write(rnd_in.read());
 
 	// Add messages from SymNode to CheckNodes:
-	for (int i=0; i<dv; i++)	  
+	for (int i=0; i<dv; i++)
 	    E += w*from_check[i];
-	
+
 	// Test flip threshold and perform local adaptation:
 	if (E < quantize(local_theta))
-	  {   
-	    local_theta = local_theta/lambda;	    
+	  {
+	    local_theta = local_theta/lambda;
 	    x = -x;
-	  }	
+	  }
 	else
 	  {
 	    local_theta = local_theta*lambda;
@@ -156,10 +156,10 @@ class checknode : public sc_module
     {
       SC_METHOD(behavior);
       for (int i=0; i<dc; i++)
-	sensitive << to_check[i];		
+	sensitive << to_check[i];
       stop.initialize(false);
     }
- 
+
  private:
   int dc;
 
@@ -180,16 +180,16 @@ class checknode : public sc_module
     //------------------------
     // Normal behavior:
     //------------------------
-    
+
     dblog("ChkNode: In=");
     int prod = 1;
-    for (int i=0; i<dc; i++)      
+    for (int i=0; i<dc; i++)
       {
 	dblog(to_check[i].read() << ", ");
 	prod *= to_check[i].read();
       }
     dblog("prod=" << prod << endl);
-      
+
 
     for (int i=0; i<dc; i++)
       from_check[i].write(prod);

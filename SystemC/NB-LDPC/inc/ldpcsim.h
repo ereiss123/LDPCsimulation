@@ -23,8 +23,9 @@
 #include <string>
 #include <cmath>
 #include <vector>
-#include <itpp/comm/galois.h>
+#include "itpp/comm/galois.h"
 using namespace std;
+using namespace itpp;
 
 #include "alist.h"
 
@@ -63,7 +64,10 @@ typedef struct
   double        N0;
 
   unsigned int  nEdges;       // Total number of edges in the code graph
+  double        alpha;        // Syndrome weight parameter
 
+  // Galois paramaters
+  vector<vector<int> > LUT;   // combination lookup table
 } simparams;
 
 // Declare a global parameter struct available to all modules:
@@ -73,11 +77,49 @@ extern simparams p;
 // Function Predefines:
 //=============================
 void get_arguments(int argc, char * argv[]);
-void append_result_to_data_file(unsigned int errors,
-				unsigned int totalbits,
-				unsigned int word_errors,
-				unsigned int total_words,
-				unsigned long totalIterations);
+void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations);
+void generate_LUT(void);
+inline int index(int GF_val){ return GF_val+1; }
+
+//---------------------------------------------------
+// quantize function
+// simulates uniform quantization in the range
+// from -Ymax to +Ymax
+//---------------------------------------------------
+void initializeQuantization()
+{
+  qthresholds.resize(p.Nq-1);
+  qvalues.resize(p.Nq);
+  for (int i=0; i<p.Nq-1; i++)
+    {
+      qthresholds[i] = -p.Ymax*(p.Nq-2.0)/(p.Nq-1.0) + i*(2.0*p.Ymax/(p.Nq-1.0));
+      qvalues[i] = -p.Ymax + i*(2.0*p.Ymax/(p.Nq-1.0));
+    }
+  qvalues[p.Nq-1] = p.Ymax;
+}
+
+double quantize(double Y)
+{
+  /*
+  double rval = Y;
+  if (rval > p.Ymax)
+    rval = p.Ymax;
+  else if (rval < -p.Ymax)
+    rval = -p.Ymax;
+  */
+  //double Qmax = pow(2.0,p.precision);
+
+  int k = 0;
+  for (int i=0; i<p.Nq-1; i++)
+    {
+      if (Y > qthresholds[i])
+	  k = i+1;
+    }
+  //  double Qval = round(rval*Qmax/p.Ymax)*p.Ymax/Qmax;
+  //  return Qval;
+  return qvalues[k];
+}
+
 
 
 #endif

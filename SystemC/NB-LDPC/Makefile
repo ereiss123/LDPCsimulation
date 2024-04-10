@@ -89,12 +89,8 @@ SRCDIRS := ./src
 # Other variables, that can be set here
 #
 # additional include options
+
 EXTRA_INCLUDES := -I./inc/
-#EXTRA_INCLUDES += -I/home/reiss/it++4.3.0
-#
-# additional library directories and link directives
-#EXTRA_LIBDIRS := -L/home/reiss/it++4.3.0/lib
-#EXTRA_LIBS    := -litpp
 EXTRA_LIBS := `itpp-config --libs`
 
 # additional preprocessor symbols to define
@@ -118,6 +114,7 @@ CXX   := g++
 # always added (useful for command-line overrides)
 #CXXFLAGS_EXTRA := 'pkg-config --cflags itpp'
 #CXXFLAGS_EXTRA += 'pkg-config --libs itpp'
+
 CXXFLAGS_EXTRA := `itpp-config --cflags` -fdiagnostics-color
 
 # additional target to clean up current test application
