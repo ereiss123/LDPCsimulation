@@ -142,5 +142,5 @@ endif
 tests: tests/bin/alist_test
 
 tests/bin/alist_test: inc/alist.h src/alist.cpp tests/alist_test.cpp
-	g++ -Iinc/ src/nrutil.cpp src/r.cpp src/alist.cpp tests/alist_test.cpp -o tests/bin/alist_test && tests/bin/alist_test 
+	g++ -Iinc/ src/nrutil.cpp src/r.cpp src/alist.cpp tests/alist_test.cpp -o tests/bin/alist_test && tests/bin/alist_test
 # Taf!
