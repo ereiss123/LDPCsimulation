@@ -32,7 +32,7 @@ using namespace itpp;
 // ===================================================================
 // Type for internal messages between check nodes and symbol nodes:
 // ===================================================================
-typedef vector<double> message_type;
+typedef std::vector<double> message_type;
 
 
 //================================
@@ -67,7 +67,7 @@ typedef struct
   double        alpha;        // Syndrome weight parameter
 
   // Galois paramaters
-  vector<vector<int> > LUT;   // combination lookup table
+  std::vector<std::vector<std::pair<int,int> > > GF_LUT;   // combination lookup table
 } simparams;
 
 // Declare a global parameter struct available to all modules:
@@ -78,8 +78,8 @@ extern simparams p;
 //=============================
 void get_arguments(int argc, char * argv[]);
 void append_result_to_data_file(unsigned int errors, unsigned int totalbits, unsigned int word_errors, unsigned int total_words, unsigned long totalIterations);
-void generate_LUT(void);
-inline int index(int GF_val){ return GF_val+1; }
+//void generate_LUT(void);
+inline int GF_index(int GF_val){ return GF_val+1; }
 
 //---------------------------------------------------
 // quantize function

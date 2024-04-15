@@ -63,7 +63,7 @@ int sc_main(int argc, char * argv[])
     tb.y[i](y[i]);
     dec.y[i](y[i]);
   }
-  
+
   for (int i=0; i<p.N; i++)
   {
     tb.d[i](d[i]);
@@ -153,31 +153,37 @@ void append_result_to_data_file(unsigned int errors, unsigned int totalbits, uns
   result_file.close();
 }
 
+/*
+I was thinking aobut the LUT table wrong and this will not work.
+I moved the LUT generation code the node constructor because the LUT table
+depends on the number of incoming connections.
+
 //==================================
 // GENERATE GF(q) LOOKUP TABLE
 //==================================
 
 void generate_LUT()
 {
-  itpp::GF z = itpp::GF(p.alist.q); // return 0th element
-  // iterate over every symbol combination
-  for(int i = 0; i < p.alist.q ; i++)
-  {
-    itpp::GF GF_i(p.alist.q,i);
-    vector<int> idxs;
-
-    itpp::GF i_gf = itpp::GF(p.alist.q,i);
-    for(int j = 0; j < p.alist.q; j++)
+  for(int k = 0; k < p.alist.q; k++){
+    // iterate over every symbol combination
+    itpp::GF GF_k(p.alist.q,k);
+    std::vector<pair<int, int> > idxs;
+    for(int i = 0; i < p.alist.q ; i++)
     {
-      itpp::GF GF_j(p.alist.q,j);
-      if(GF_j + GF_i == z)
+      itpp::GF GF_i(p.alist.q,i);
+      for(int j = 0; j < p.alist.q; j++)
       {
-        pair<int,int> elements(i,j);
-        idxs.emplace_back(elements);
+        itpp::GF GF_j(p.alist.q,j);
+
+        if(GF_j + GF_i == GF_k)
+        {
+          pair<int,int> elements(GF_index(i),GF_index(j));
+          idxs.emplace_back(elements);
+        }
       }
     }
-    p.LUT.emplace_back(idxs);
+    p.GF_LUT.emplace_back(idxs);
   }
 }
-
+/*
 

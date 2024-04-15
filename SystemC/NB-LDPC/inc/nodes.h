@@ -52,18 +52,18 @@ class symnode : public sc_module
   sc_in<bool>				clk;
   sc_in<bool>				rst;
 
-  
+
   SC_HAS_PROCESS(symnode);
-  
+
   symnode(sc_module_name name,
 	  int    _dv,
 	  int    _q) : sc_module(name),
 		       dv(_dv),
-		       q(_q), 
+		       q(_q),
 		       from_check("from_check",_dv),
 		       to_check("to_check",_dv)
     {
-      
+
       b = int(log2(q));
 
       // Declare node behavior method:
@@ -73,7 +73,7 @@ class symnode : public sc_module
 
  private:
   unsigned int dv;
-    
+
   int b;    // number of bits in field
   int q;    // field size, 2^b
 
@@ -87,15 +87,15 @@ class symnode : public sc_module
     if (rst.read())
     {
 
-      message_type soft_symbol;      
-      soft_symbol = r.read(); 
+      message_type soft_symbol;
+      soft_symbol = r.read();
 
-      
+
       /* move this out to another module, so the symnode's "soft_symbol"
-	 input is already a message_type containing probabilities, so the 
+	 input is already a message_type containing probabilities, so the
 	 nodes only ever work with message_type inputs and outputs.
 
-      // calculate the likelihood for each symbol	 
+      // calculate the likelihood for each symbol
       message_type probabilities;
       double likelihood;
 
@@ -113,7 +113,7 @@ class symnode : public sc_module
         probabilities.emplace_back(prob);
       }
       */
-      
+
 
       // Write initial probabilities to all adjacent check nodes
       for (int i=0; i<dv; i++){
@@ -122,13 +122,13 @@ class symnode : public sc_module
 
       // Get initial decision
       // find the index of the max probability
-      auto it = find(soft_symbol.begin(),soft_symbol.end(),max_element(soft_symbol.begin(),soft_symbol.end()));
-      // it is an address, subtract from the beginning address to get the index
-      int symbol = it-soft_symbol.begin();
-      dblog(it << "\t" << soft_symbol.begin() << "\t" << symbol << endl);
+      auto iter = find(soft_symbol.begin(),soft_symbol.end(),max_element(soft_symbol.begin(),soft_symbol.end()));
+      // 'iter is an address, subtract from the beginning address to get the index
+      int symbol = iter-soft_symbol.begin();
+      dblog(iter << "\t" << soft_symbol.begin() << "\t" << symbol << endl);
       d.write(symbol);
     }
-    
+
     //------------------------
     // Normal behavior:
     //------------------------
@@ -173,8 +173,8 @@ class symnode : public sc_module
 class checknode : public sc_module
 {
  public:
-  sc_vector<sc_out<message_type > > 	from_check;
-  sc_vector<sc_in<message_type > > 	to_check;
+  sc_vector<sc_out<message_type > > 	from_check; // check node -> symbol node
+  sc_vector<sc_in<message_type > > 	to_check; // symbol_node -> check node
   sc_out<bool>				stop;
   sc_in<bool>				clk;
   sc_in<bool>				rst;
@@ -191,10 +191,49 @@ class checknode : public sc_module
       sensitive << to_check[i];
 
     stop.initialize(false);
+
+    // Generate LUT
+    // for each element in GF(q)
+    for(int sym=0; sym<p.alist.q; sym++)
+    {
+      itpp::GF gf_element(p.alist.q,sym);
+      // find combinatations of dc length
+      std::vector<int> combos(dc, 0);
+
+      int idx = 0;
+      while(!((idx == dc-1) && (combos[idx] == p.alist.q)))
+      {
+        itpp::GF gf_sum(p.alist.q); // returns the 0 element
+        // Sum the combo
+        for(int x : combos)
+        {
+          itpp::GF gf_temp(p.alist.q,x)
+          gf_sum += gf_temp;
+        }
+        // Check if valid combo was found
+        if(gf_sum == gf_element)
+        {
+          // save valid combos for each GF(q) element
+          node_LUT[sym].emplace_back(combos);
+        }
+        // update combo list
+        idx = 0;
+        // Treat the combo as a base q number and add 1 to go through every option
+        while((combos[idx]+1)%p.alist.q == 0)
+        {
+          combos[idx] = 0;
+          idx++;
+        }
+        combos[idx]++;
+      }
+    }
   }
 
   private:
   int dc;
+  // Lookup table to calculate probabilities
+  // The first index is the element of GF(q)
+  std::vector<std::vector<int>> node_LUT;
 
   //************* CHECKNODE BEHAVIOR *********************//
   void behavior()
@@ -205,7 +244,7 @@ class checknode : public sc_module
     /*
     if (rst.read())
     {
-	    None defined...
+      None Defined...
     }
     */
 
@@ -215,11 +254,26 @@ class checknode : public sc_module
     //------------------------
 
     // Collect all neighboring messages into a matrix
-    vector<message_type> to_check_mat;
-    for (int i=0; i<dc; i++){
+    std::vector<message_type> to_check_mat;
+    for (int i=0; i<dc; i++)
+    {
       to_check_mat.emplace_back(to_check[i].read());
     }
 
+    // Iterate through the lookup table to calculate the outgoing message
+    message_type result(p.alist.q);
+    for(int i=0; i<p.alist.q; i++)
+    {
+      // i is the element of GF(q) being calculated for
+      // p.LUT is a vector of vectors
+      // p.LUT[i] is a vector of pairs
+      result[i] = 0;
+      int idx = 0;
+      for(std::pair<int,int> symbol_pair : p.LUT[i])
+      {
+
+      }
+    }
 
     for (int i=0; i<dc; i++)
       from_check[i].write(prod);

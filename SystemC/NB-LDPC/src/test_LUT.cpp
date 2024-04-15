@@ -48,6 +48,29 @@ int main(void){
     return 0;
 }
 
+void generate_LUT(int q)
+{
+  itpp::GF z = itpp::GF(q); // return 0th element
+  // iterate over every symbol combination
+  for(int i = 0; i < q ; i++)
+  {
+    itpp::GF GF_i(q,i);
+    std::vector<std::pair <int, int> > idxs;
+
+    itpp::GF i_gf = itpp::GF(p.alist.q,i);
+    for(int j = 0; j < p.alist.q; j++)
+    {
+      itpp::GF GF_j(p.alist.q,j);
+      if(GF_j + GF_i == z)
+      {
+        std::pair<int,int> elements(i+1,j+1);
+        idxs.emplace_back(elements);
+      }
+    }
+    p.LUT.emplace_back(idxs);
+  }
+}
+
 void print_addition_table(int q){
     std::cout << "+ |";
     // Print addition table
