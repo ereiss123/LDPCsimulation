@@ -199,7 +199,6 @@ class checknode : public sc_module
       itpp::GF gf_element(p.alist.q,sym);
       // find combinatations of dc length
       std::vector<int> combos(dc, 0);
-
       int idx = 0;
       while(!((idx == dc-1) && (combos[idx] == p.alist.q)))
       {
@@ -232,8 +231,10 @@ class checknode : public sc_module
   private:
   int dc;
   // Lookup table to calculate probabilities
-  // The first index is the element of GF(q)
-  std::vector<std::vector<int>> node_LUT;
+  // First index corresponds to the element in GF(q)
+  // Second index selects a vector of combinations that sum to the selected element of GF(q)
+  // Third index is the index of the input vector probability
+  std::vector<std::vector<std::vector<int>>> node_LUT;
 
   //************* CHECKNODE BEHAVIOR *********************//
   void behavior()
@@ -264,15 +265,7 @@ class checknode : public sc_module
     message_type result(p.alist.q);
     for(int i=0; i<p.alist.q; i++)
     {
-      // i is the element of GF(q) being calculated for
-      // p.LUT is a vector of vectors
-      // p.LUT[i] is a vector of pairs
-      result[i] = 0;
-      int idx = 0;
-      for(std::pair<int,int> symbol_pair : p.LUT[i])
-      {
 
-      }
     }
 
     for (int i=0; i<dc; i++)
