@@ -185,5 +185,5 @@ void generate_LUT()
     p.GF_LUT.emplace_back(idxs);
   }
 }
-/*
+*/
 

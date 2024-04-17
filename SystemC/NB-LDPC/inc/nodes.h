@@ -265,16 +265,31 @@ class checknode : public sc_module
     message_type result(p.alist.q);
     for(int i=0; i<p.alist.q; i++)
     {
-
+      // select all the valid combos that make up a symbol
+      std::vector<std::vector<int>> symbol_combos = node_LUT[i];
+      double sum = 0.0;
+      // For each valid combo
+      for(std::vector<int> combo : symbol_combos)
+      {
+        double term = 1.0;
+        // multiply together the probabilities
+        for(int j=0; j<dc; j++)
+        {
+          term *= to_check_mat[j][combo[j]]
+        }
+        // and sum the results
+        sum += term;
+      }
+      result[i] = sum;
     }
 
     for (int i=0; i<dc; i++)
-      from_check[i].write(prod);
+      from_check[i].write(result);
 
-    if (prod==1)
-      stop.write(true);
-    else
-      stop.write(false);
+    // if (prod==1)
+    //   stop.write(true);
+    // else
+    //   stop.write(false);
   }
 
 };
